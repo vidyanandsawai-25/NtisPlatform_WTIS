@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumer Account Search - Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .search-section {
+            margin-bottom: 30px;
+        }
+        
+        .api-url {
+            margin-bottom: 10px;
+        }
+        
+        .api-url input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .search-box button {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .search-box button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .example-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .result-section {
+            margin-top: 30px;
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 100px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+        }
+        
+        .error {
+            background: #fee;
+            border-color: #fcc;
+            color: #c33;
+        }
+        
+        .success {
+            background: #efe;
+            border-color: #cfc;
+        }
+        
+        .consumer-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .consumer-header {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .consumer-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .consumer-number {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .detail-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .raw-json {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        pre {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? Consumer Account Search</h1>
+        <p class="subtitle">Universal Search API - Find by Any Parameter</p>
+        
+        <div class="search-section">
+            <div class="api-url">
+                <input type="text" id="apiUrl" placeholder="API Base URL" value="http://localhost:5000">
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Enter: Consumer Number, Mobile, Name, or Pattern (e.g., 1-PROP001-PART001)">
+                <button onclick="searchConsumer()">Search</button>
+            </div>
+            
+            <div class="examples">
+                <div class="example-btn" onclick="setSearch('CON001')">
+                    <div>Consumer Number</div>
+                    <small>CON001</small>
+                </div>
+                <div class="example-btn" onclick="setSearch('9876543210')">
+                    <div>Mobile Number</div>
+                    <small>9876543210</small>
+                </div>
+                <div class="example-btn" onclick="setSearch('Raj Sharma')">
+                    <div>Consumer Name</div>
+                    <small>Raj Sharma</small>
+                </div>
+                <div class="example-btn" onclick="setSearch('1-PROP011-FLAT-101')">
+                    <div>Ward-Property-Flat</div>
+                    <small>1-PROP011-FLAT-101</small>
+                </div>
+                <div class="example-btn" onclick="setSearch('PROP011')">
+                    <div>Property Number</div>
+                    <small>PROP011</small>
+                </div>
+                <div class="example-btn" onclick="setSearch('raj@example.com')">
+                    <div>Email</div>
+                    <small>raj@example.com</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-section">
+            <h2>Result:</h2>
+            <div id="result" class="result-box">
+                <p style="text-align: center; color: #999;">Enter a search value and click Search</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function setSearch(value) {
+            document.getElementById('searchInput').value = value;
+            searchConsumer();
+        }
+        
+        async function searchConsumer() {
+            const searchValue = document.getElementById('searchInput').value.trim();
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!searchValue) {
+                resultDiv.className = 'result-box error';
+                resultDiv.innerHTML = '<p>Please enter a search value</p>';
+                return;
+            }
+            
+            resultDiv.className = 'result-box';
+            resultDiv.innerHTML = '<div class="loading">?? Searching...</div>';
+            
+            try {
+                const url = `${apiUrl}/api/wtis/consumeraccount/find-consumer?search=${encodeURIComponent(searchValue)}`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    resultDiv.className = 'result-box error';
+                    if (response.status === 404) {
+                        resultDiv.innerHTML = `
+                            <h3>? Not Found</h3>
+                            <p><strong>Search Value:</strong> ${escapeHtml(searchValue)}</p>
+                            <p>${escapeHtml(data.message || 'Consumer not found')}</p>
+                            ${data.hint ? `<p><small>${escapeHtml(data.hint)}</small></p>` : ''}
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <h3>? Error</h3>
+                            <p>${escapeHtml(data.message || 'An error occurred')}</p>
+                        `;
+                    }
+                    return;
+                }
+                
+                resultDiv.className = 'result-box success';
+                resultDiv.innerHTML = renderConsumerCard(data);
+                
+            } catch (error) {
+                resultDiv.className = 'result-box error';
+                resultDiv.innerHTML = `
+                    <h3>? Network Error</h3>
+                    <p>Failed to connect to API</p>
+                    <p><small>${escapeHtml(error.message)}</small></p>
+                    <p><small>Make sure the API is running and the URL is correct</small></p>
+                `;
+                console.error('Error:', error);
+            }
+        }
+        
+        function renderConsumerCard(consumer) {
+            return `
+                <div class="consumer-card">
+                    <div class="consumer-header">
+                        <div class="consumer-name">
+                            ${escapeHtml(consumer.consumerName || 'N/A')}
+                            ${consumer.consumerNameEnglish ? `<br><small>${escapeHtml(consumer.consumerNameEnglish)}</small>` : ''}
+                        </div>
+                        <div class="consumer-number">Consumer #${escapeHtml(consumer.consumerNumber || 'N/A')}</div>
+                    </div>
+                    
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">?? Mobile Number</div>
+                            <div class="detail-value">${escapeHtml(consumer.mobileNumber || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Email</div>
+                            <div class="detail-value">${escapeHtml(consumer.emailID || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">??? Zone / Ward</div>
+                            <div class="detail-value">Zone ${escapeHtml(consumer.zoneNo || 'N/A')} / Ward ${escapeHtml(consumer.wardNo || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Property</div>
+                            <div class="detail-value">${escapeHtml(consumer.propertyNumber || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Partition/Flat</div>
+                            <div class="detail-value">${escapeHtml(consumer.partitionNumber || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">? Status</div>
+                            <div class="detail-value">${consumer.isActive ? '?? Active' : '?? Inactive'}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Address</div>
+                            <div class="detail-value">${escapeHtml(consumer.addressEnglish || consumer.address || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Remark</div>
+                            <div class="detail-value">${escapeHtml(consumer.remark || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Connection Type</div>
+                            <div class="detail-value">${escapeHtml(consumer.connectionTypeID || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Category</div>
+                            <div class="detail-value">${escapeHtml(consumer.categoryID || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Pipe Size</div>
+                            <div class="detail-value">${escapeHtml(consumer.pipeSizeID || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">?? Connection Date</div>
+                            <div class="detail-value">${consumer.connectionDate ? new Date(consumer.connectionDate).toLocaleDateString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="raw-json">
+                        <strong>Raw JSON Response:</strong>
+                        <pre>${JSON.stringify(consumer, null, 2)}</pre>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Allow Enter key to search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchConsumer();
+            }
+        });
+    </script>
+</body>
+</html>
