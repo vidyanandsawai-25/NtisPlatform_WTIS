@@ -56,12 +56,13 @@ public class ConsumerAccountRepository : Repository<ConsumerAccountEntity, int>,
         string? zoneNo = null,
         string? consumerName = null,
         bool? isActive = null,
+        string? emailID = null,
         CancellationToken cancellationToken = default)
     {
         // Build dynamic LINQ query with filters
         var query = BuildSearchQuery(
             consumerNumber, oldConsumerNumber, mobileNumber,
-            wardNo, propertyNumber, zoneNo, consumerName, isActive);
+            wardNo, propertyNumber, zoneNo, consumerName, isActive, emailID);
 
         // Execute optimized query with projections
         return await query.ToListAsync(cancellationToken);
@@ -138,7 +139,7 @@ public class ConsumerAccountRepository : Repository<ConsumerAccountEntity, int>,
     private IQueryable<ConsumerAccountWithMasterData> BuildSearchQuery(
         string? consumerNumber, string? oldConsumerNumber, string? mobileNumber,
         string? wardNo, string? propertyNumber, string? zoneNo,
-        string? consumerName, bool? isActive)
+        string? consumerName, bool? isActive, string? emailID = null)
     {
         var query = GetBaseQueryWithJoins();
 
@@ -156,6 +157,9 @@ public class ConsumerAccountRepository : Repository<ConsumerAccountEntity, int>,
 
         if (!string.IsNullOrWhiteSpace(mobileNumber))
             query = query.Where(ca => ca.MobileNumber != null && ca.MobileNumber.Contains(mobileNumber));
+
+        if (!string.IsNullOrWhiteSpace(emailID))
+            query = query.Where(ca => ca.EmailID != null && ca.EmailID.Contains(emailID));
 
         if (!string.IsNullOrWhiteSpace(wardNo))
             query = query.Where(ca => ca.WardNo == wardNo);

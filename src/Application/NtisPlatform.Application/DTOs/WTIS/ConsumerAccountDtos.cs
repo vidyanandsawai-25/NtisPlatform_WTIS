@@ -60,6 +60,7 @@ public class ConsumerAccountSearchDto
     public string? OldConsumerNumber { get; set; }
     public string? ConsumerName { get; set; } // Searches both Hindi and English
     public string? MobileNumber { get; set; }
+    public string? EmailID { get; set; } // Email search support
 
     // Exact match filters (indexed fields)
     public string? WardNo { get; set; }

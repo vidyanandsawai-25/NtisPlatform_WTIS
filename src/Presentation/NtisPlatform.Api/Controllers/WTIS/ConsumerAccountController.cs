@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NtisPlatform.Application.DTOs.WTIS;
 using NtisPlatform.Application.Interfaces.WTIS;
 
@@ -11,6 +11,7 @@ namespace NtisPlatform.Api.Controllers.WTIS;
 [Route("api/wtis/consumer")]
 public class ConsumerAccountController : ControllerBase
 {
+
     #region Fields
 
     private readonly IConsumerAccountService _service;
@@ -31,34 +32,32 @@ public class ConsumerAccountController : ControllerBase
     #region API Endpoints
 
     /// <summary>
-    /// Universal search - ONE parameter for all search types
+    /// Universal search - ONE parameter for all search types (returns all matching results)
     /// </summary>
     /// <remarks>
     /// **Hierarchical Pattern Search:**
-    /// - Ward only: `?search=1` ? All consumers in Ward 1
-    /// - Ward-Property: `?search=1-PROP011` ? All in property (all partitions)
-    /// - Ward-Property-Partition: `?search=1-PROP011-FLAT-101` ? Exact consumer
+    /// - Ward only: `?search=1` → All consumers in Ward 1
+    /// - Ward-Property: `?search=1-PROP011` → All in property (all partitions)
+    /// - Ward-Property-Partition: `?search=1-PROP011-FLAT-101` → Exact consumer
     /// 
     /// **Direct Identifier Search:**
-    /// - Consumer Number: `?search=CON001`
-    /// - Mobile: `?search=9876543210`
-    /// - Name: `?search=Raj Sharma` (Hindi/English)
-    /// - Email: `?search=raj@example.com`
-    /// - ID: `?search=41226`
+    /// - Consumer Number: `?search=CON001` → Single result (unique)
+    /// - Mobile: `?search=9876543210` → Multiple results (can be shared)
+    /// - Name: `?search=Raj Sharma` → Multiple results (Hindi/English)
+    /// - Email: `?search=raj@example.com` → Multiple results (can be shared)
+    /// - ID: `?search=41226` → Single result (unique)
+    /// 
+    /// **Note:** Returns all matching results without pagination
     /// </remarks>
     /// <param name="search">Universal search parameter (required)</param>
-    /// <param name="pageNumber">Page number for list results (default: 1)</param>
-    /// <param name="pageSize">Page size for list results (default: 10, max: 100)</param>
     /// <param name="ct">Cancellation token</param>
     [HttpGet]
     [ProducesResponseType(typeof(ConsumerAccountDto), 200)]
-    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(IEnumerable<ConsumerAccountDto>), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Search(
         [FromQuery] string? search = null,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
         CancellationToken ct = default)
     {
         try
@@ -69,21 +68,18 @@ public class ConsumerAccountController : ControllerBase
                     "Search parameter is required.",
                     "Use: ?search=CON001 or ?search=1 or ?search=1-PROP011 or ?search=1-PROP011-FLAT-101"));
 
-            // Validate and normalize pagination
-            pageSize = Math.Clamp(pageSize, 1, 100);
-            pageNumber = Math.Max(pageNumber, 1);
             search = search.Trim();
 
             // Pattern detection: Ward-Property-Partition (contains dash)
             if (search.Contains('-'))
             {
-                return await HandlePatternSearch(search, pageNumber, pageSize, ct);
+                return await HandlePatternSearch(search, ct);
             }
 
             // Number detection: Ward number or Consumer ID
             if (int.TryParse(search, out int number))
             {
-                return await HandleNumberSearch(search, number, pageNumber, pageSize, ct);
+                return await HandleNumberSearch(search, number, ct);
             }
 
             // Direct field search: Consumer#, Mobile, Name, Email
@@ -101,12 +97,10 @@ public class ConsumerAccountController : ControllerBase
     #region Private Helper Methods
 
     /// <summary>
-    /// Handle pattern search (Ward-Property-Partition)
+    /// Handle pattern search (Ward-Property-Partition) - returns all matching results
     /// </summary>
     private async Task<IActionResult> HandlePatternSearch(
         string search,
-        int pageNumber,
-        int pageSize,
         CancellationToken ct)
     {
         var parts = search.Split('-', StringSplitOptions.TrimEntries);
@@ -133,23 +127,21 @@ public class ConsumerAccountController : ControllerBase
             PropertyNumber = propertyNumber
         };
 
-        var pagedResult = await _service.SearchConsumersAsync(searchDto, pageNumber, pageSize, ct);
-        return pagedResult.TotalCount > 0
-            ? Ok(pagedResult)
+        var results = await _service.SearchConsumersAsync(searchDto, ct);
+        return results.Any()
+            ? Ok(new { totalCount = results.Count(), data = results })
             : NotFound(CreateNotFoundResponse(search, $"No consumers in Ward {wardNo}, Property {propertyNumber}"));
     }
 
     /// <summary>
-    /// Handle number search (Ward or Consumer ID)
+    /// Handle number search (Ward or Consumer ID) - returns all matching results
     /// </summary>
     private async Task<IActionResult> HandleNumberSearch(
         string search,
         int number,
-        int pageNumber,
-        int pageSize,
         CancellationToken ct)
     {
-        // Large numbers (>100) treated as Consumer ID
+        // Large numbers (>100) treated as Consumer ID (unique - single result)
         if (number > 100)
         {
             var consumerById = await _service.FindConsumerAsync(search, ct);
@@ -158,18 +150,56 @@ public class ConsumerAccountController : ControllerBase
 
         // Level 1: Ward number (all consumers in ward)
         var searchDto = new ConsumerAccountSearchDto { WardNo = search };
-        var pagedResult = await _service.SearchConsumersAsync(searchDto, pageNumber, pageSize, ct);
+        var results = await _service.SearchConsumersAsync(searchDto, ct);
 
-        return pagedResult.TotalCount > 0
-            ? Ok(pagedResult)
+        return results.Any()
+            ? Ok(new { totalCount = results.Count(), data = results })
             : NotFound(CreateNotFoundResponse(search, $"No active consumers in Ward {search}"));
     }
 
     /// <summary>
     /// Handle direct field search (Consumer#, Mobile, Name, Email)
+    /// Mobile, Name, and Email can have multiple results
     /// </summary>
     private async Task<IActionResult> HandleDirectSearch(string search, CancellationToken ct)
     {
+        // Check if it's a 10-digit mobile number
+        if (search.Length == 10 && search.All(char.IsDigit))
+        {
+            // Mobile number - can have multiple consumers
+            var searchDto = new ConsumerAccountSearchDto { MobileNumber = search };
+            var results = await _service.SearchConsumersAsync(searchDto, ct);
+            
+            return results.Any()
+                ? Ok(new { totalCount = results.Count(), data = results })
+                : NotFound(CreateNotFoundResponse(search, "No consumers found with this mobile number"));
+        }
+
+        // Check if it contains @ (email)
+        if (search.Contains('@'))
+        {
+            // Email - can have multiple consumers
+            var searchDto = new ConsumerAccountSearchDto { EmailID = search };
+            var results = await _service.SearchConsumersAsync(searchDto, ct);
+            
+            return results.Any()
+                ? Ok(new { totalCount = results.Count(), data = results })
+                : NotFound(CreateNotFoundResponse(search, "No consumers found with this email"));
+        }
+
+        // Check if it's likely a name (contains space or non-numeric characters)
+        if (search.Contains(' ') || search.Any(c => !char.IsDigit(c) && c != '-'))
+        {
+            // Name search - can have multiple consumers
+            var searchDto = new ConsumerAccountSearchDto { ConsumerName = search };
+            var results = await _service.SearchConsumersAsync(searchDto, ct);
+            
+            return results.Any()
+                ? Ok(new { totalCount = results.Count(), data = results })
+                : NotFound(CreateNotFoundResponse(search, "No consumers found with this name"));
+        }
+
+        // Consumer Number or other unique identifier - single result
         var result = await _service.FindConsumerAsync(search, ct);
         return result != null
             ? Ok(result)
@@ -188,7 +218,7 @@ public class ConsumerAccountController : ControllerBase
         examples = new[]
         {
             "?search=CON001 (Consumer Number)",
-            "?search=9876543210 (Mobile)",
+            "?search=9876543210 (Mobile - all consumers)",
             "?search=1 (Ward - all consumers)",
             "?search=1-PROP011 (Property - all partitions)",
             "?search=1-PROP011-FLAT-101 (Exact consumer)"
@@ -206,4 +236,5 @@ public class ConsumerAccountController : ControllerBase
     };
 
     #endregion
+
 }

@@ -28,5 +28,6 @@ public interface IConsumerAccountRepository : IRepository<ConsumerAccountEntity,
         string? zoneNo = null,
         string? consumerName = null,
         bool? isActive = null,
+        string? emailID = null,
         CancellationToken cancellationToken = default);
 }
