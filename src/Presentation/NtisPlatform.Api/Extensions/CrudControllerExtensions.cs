@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NtisPlatform.Application.DTOs.Queries;
 using NtisPlatform.Application.Exceptions;
 using NtisPlatform.Application.Interfaces;
 using NtisPlatform.Application.Models;
-using System.Diagnostics.Metrics;
 
 namespace NtisPlatform.Api.Extensions;
 
+/// <summary>
+/// Generic CRUD controller extension methods - Reusable by all modules
+/// </summary>
 public static class CrudControllerExtensions
 {
+    /// <summary>
+    /// Execute GetAll with pagination, filtering, and sorting
+    /// </summary>
     public static async Task<IActionResult> ExecuteGetAllPaged<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey>(
         this ControllerBase controller,
         ICommonCrudService<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey> service,
@@ -43,6 +47,9 @@ public static class CrudControllerExtensions
         }
     }
 
+    /// <summary>
+    /// Execute GetById operation
+    /// </summary>
     public static async Task<IActionResult> ExecuteGetById<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey>(
         this ControllerBase controller,
         ICommonCrudService<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey> service,
@@ -67,6 +74,9 @@ public static class CrudControllerExtensions
         }
     }
 
+    /// <summary>
+    /// Execute Create operation with duplicate detection
+    /// </summary>
     public static async Task<IActionResult> ExecuteCreate<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey>(
         this ControllerBase controller,
         ICommonCrudService<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey> service,
@@ -77,8 +87,6 @@ public static class CrudControllerExtensions
     {
         try
         {
-
-
             var result = await service.CreateAsync(createDto, cancellationToken);
             return controller.Ok(new ApiResponse<TDto>
             {
@@ -86,15 +94,12 @@ public static class CrudControllerExtensions
                 Message = "Record inserted successfully",
                 Items = result
             });
-
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Create operation failed");
             var errorMessage = ex.InnerException?.Message ?? ex.Message;
 
-
-            // Duplicate / unique constraint (DB-agnostic-ish)
             if (errorMessage.Contains("duplicate", StringComparison.OrdinalIgnoreCase) ||
                 errorMessage.Contains("unique", StringComparison.OrdinalIgnoreCase) ||
                 errorMessage.Contains("constraint", StringComparison.OrdinalIgnoreCase))
@@ -105,15 +110,18 @@ public static class CrudControllerExtensions
                     Message = "A record with the same details already exists."
                 });
             }
+            
             return controller.StatusCode(500, new ApiResponse<TDto>
             {
                 Success = false,
                 Message = "An error occurred while processing your request."
             });
-
         }
     }
 
+    /// <summary>
+    /// Execute Update operation with duplicate detection
+    /// </summary>
     public static async Task<IActionResult> ExecuteUpdate<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey>(
         this ControllerBase controller,
         ICommonCrudService<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey> service,
@@ -132,7 +140,7 @@ public static class CrudControllerExtensions
                 return controller.Ok(new ApiResponse<TDto>
                 {
                     Success = false,
-                    Message = "Record not found for Update ",
+                    Message = "Record not found for Update",
                     Items = result
                 });
             }
@@ -143,18 +151,12 @@ public static class CrudControllerExtensions
                 Message = "Record updated successfully",
                 Items = result
             });
-
-
-
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Update operation failed for id: {Id}", id);
-
-
             var errorMessage = ex.InnerException?.Message ?? ex.Message;
 
-            // Duplicate / unique constraint (DB-agnostic-ish)
             if (errorMessage.Contains("duplicate", StringComparison.OrdinalIgnoreCase) ||
                 errorMessage.Contains("unique", StringComparison.OrdinalIgnoreCase) ||
                 errorMessage.Contains("constraint", StringComparison.OrdinalIgnoreCase))
@@ -165,15 +167,18 @@ public static class CrudControllerExtensions
                     Message = "A record with the same details already exists."
                 });
             }
+            
             return controller.StatusCode(500, new ApiResponse<TDto>
             {
                 Success = false,
                 Message = "An error occurred while processing your request."
             });
-
         }
     }
 
+    /// <summary>
+    /// Execute Delete operation
+    /// </summary>
     public static async Task<IActionResult> ExecuteDelete<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey>(
         this ControllerBase controller,
         ICommonCrudService<TEntity, TDto, TCreateDto, TUpdateDto, TQueryParams, TKey> service,
@@ -185,18 +190,17 @@ public static class CrudControllerExtensions
         try
         {
             var result = await service.DeleteAsync(id, cancellationToken);
-            return result ? controller.Ok(new ApiResponse<TDto>
-            {
-                Success = true,
-                Message = "Record deleted"
-            }) :
-            controller.Ok(new ApiResponse<TDto>
-            {
-                Success = false,
-                Message = "Record not found to delete"
-            });
-
-
+            return result 
+                ? controller.Ok(new ApiResponse<TDto>
+                {
+                    Success = true,
+                    Message = "Record deleted"
+                }) 
+                : controller.Ok(new ApiResponse<TDto>
+                {
+                    Success = false,
+                    Message = "Record not found to delete"
+                });
         }
         catch (Exception ex)
         {
@@ -206,6 +210,72 @@ public static class CrudControllerExtensions
                 Success = false,
                 Message = "An error occurred while processing your request."
             });
+        }
+    }
+
+    /// <summary>
+    /// Execute universal search - Generic method for any service with UniversalSearchAsync method
+    /// Uses reflection to invoke UniversalSearchAsync(string, CancellationToken) on any service
+    /// </summary>
+    /// <typeparam name="TService">Service type (any class with UniversalSearchAsync method)</typeparam>
+    /// <param name="controller">Controller instance</param>
+    /// <param name="service">Service instance</param>
+    /// <param name="search">Search parameter</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Search results or error response</returns>
+    public static async Task<IActionResult> ExecuteUniversalSearch<TService>(
+        this ControllerBase controller,
+        TService service,
+        string? search,
+        ILogger logger,
+        CancellationToken cancellationToken = default)
+        where TService : class
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                return controller.BadRequest(new
+                {
+                    message = "Search parameter is required",
+                    hint = "Provide a search value"
+                });
+            }
+
+            var methodInfo = typeof(TService).GetMethod("UniversalSearchAsync");
+            if (methodInfo == null)
+            {
+                logger.LogError("UniversalSearchAsync method not found on service type {ServiceType}", typeof(TService).Name);
+                return controller.StatusCode(500, new { message = "Search not supported" });
+            }
+
+            var task = methodInfo.Invoke(service, new object[] { search, cancellationToken }) as Task<object>;
+            if (task == null)
+            {
+                logger.LogError("Failed to invoke UniversalSearchAsync");
+                return controller.StatusCode(500, new { message = "Search execution failed" });
+            }
+
+            var result = await task;
+            
+            var resultType = result.GetType();
+            var messageProperty = resultType.GetProperty("message");
+            if (messageProperty != null)
+            {
+                var message = messageProperty.GetValue(result)?.ToString();
+                if (message?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    return controller.NotFound(result);
+                }
+            }
+
+            return controller.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Universal search error: {Search}", search);
+            return controller.StatusCode(500, new { message = "An error occurred while searching" });
         }
     }
 }

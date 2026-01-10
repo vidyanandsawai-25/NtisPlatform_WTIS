@@ -31,8 +31,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<FloorEntity> FloorEntity { get; set; } = null!;
     public DbSet<SubFloorEntity> SubFloorEntity { get; set; } = null!;
 
-    // WTIS entities
-    public DbSet<ConsumerAccountEntity> ConsumerAccounts { get; set; } = null!;
+    // WTIS Master entities
     public DbSet<ConnectionTypeMasterEntity> ConnectionTypeMaster { get; set; } = null!;
     public DbSet<ConnectionCategoryMasterEntity> ConnectionCategoryMaster { get; set; } = null!;
     public DbSet<PipeSizeMasterEntity> PipeSizeMaster { get; set; } = null!;
@@ -40,45 +39,6 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // WTIS - Consumer Account
-        modelBuilder.Entity<ConsumerAccountEntity>(entity =>
-        {
-            entity.ToTable("ConsumerAccount", "WTIS");
-            entity.HasKey(e => e.ConsumerID);
-
-            // Indexes for performance
-            entity.HasIndex(e => e.ConsumerNumber).IsUnique();
-            entity.HasIndex(e => e.OldConsumerNumber);
-            entity.HasIndex(e => e.ZoneNo);
-            entity.HasIndex(e => e.WardNo);
-            entity.HasIndex(e => e.PropertyNumber);
-            entity.HasIndex(e => e.MobileNumber);
-            entity.HasIndex(e => e.IsActive);
-
-            // String properties with max lengths
-            entity.Property(e => e.ConsumerNumber).IsRequired().HasMaxLength(40);
-            entity.Property(e => e.OldConsumerNumber).HasMaxLength(40);
-            entity.Property(e => e.ZoneNo).HasMaxLength(50);
-            entity.Property(e => e.WardNo).HasMaxLength(50);
-            entity.Property(e => e.PropertyNumber).HasMaxLength(50);
-            entity.Property(e => e.PartitionNumber).HasMaxLength(50);
-            entity.Property(e => e.ConsumerName).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.ConsumerNameEnglish).HasMaxLength(200);
-            entity.Property(e => e.MobileNumber).HasMaxLength(15);
-            entity.Property(e => e.EmailID).HasMaxLength(120);
-            entity.Property(e => e.Address).HasMaxLength(250);
-            entity.Property(e => e.AddressEnglish).HasMaxLength(250);
-            entity.Property(e => e.Remark).HasColumnType("nvarchar(max)");
-            
-            // Foreign keys
-            entity.Property(e => e.ConnectionTypeID).IsRequired();
-            entity.Property(e => e.CategoryID).IsRequired();
-            entity.Property(e => e.PipeSizeID).IsRequired();
-            
-            // Date field
-            entity.Property(e => e.ConnectionDate).HasColumnType("date");
-        });
 
         // WTIS - Connection Type Master
         modelBuilder.Entity<ConnectionTypeMasterEntity>(entity =>
@@ -103,12 +63,6 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.PipeSizeID);
             entity.Property(e => e.SizeName).IsRequired().HasMaxLength(50);
         });
-
-
-
-
-
-
 
         // PTIS entities configuration
         modelBuilder.Entity<ConstructionTypeEntity>(entity =>

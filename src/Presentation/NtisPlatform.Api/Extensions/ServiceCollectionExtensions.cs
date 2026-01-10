@@ -40,9 +40,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // WTIS Repositories
-        services.AddScoped<NtisPlatform.Core.Interfaces.WTIS.IConsumerAccountRepository, NtisPlatform.Infrastructure.Repositories.WTIS.ConsumerAccountRepository>();
-
         // Authentication Services
         services.AddScoped<IPasswordHasher, Infrastructure.Services.Auth.PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -58,13 +55,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
 
-        // CRUD Services
+        // CRUD Services (all follow same pattern)
         services.AddScoped<IFloorService, FloorService>();
         services.AddScoped<IConstructionTypeService, ConstructionTypeService>();
         services.AddScoped<ISubFloorService, SubFloorService>();
 
-        // WTIS Services
-        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IConsumerAccountService, NtisPlatform.Application.Services.WTIS.ConsumerAccountService>();
+        // WTIS Master Services (pure CRUD with generic extensions)
+        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IConnectionTypeService, NtisPlatform.Application.Services.WTIS.ConnectionTypeService>();
+        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IConnectionCategoryService, NtisPlatform.Application.Services.WTIS.ConnectionCategoryService>();
+        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IPipeSizeService, NtisPlatform.Application.Services.WTIS.PipeSizeService>();
 
         // AutoMapper
         services.AddAutoMapper(typeof(NtisPlatform.Application.Mappings.FloorMappingProfile).Assembly);
