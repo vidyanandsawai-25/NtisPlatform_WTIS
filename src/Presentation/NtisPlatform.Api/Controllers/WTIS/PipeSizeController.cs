@@ -6,7 +6,7 @@ using NtisPlatform.Application.Interfaces.WTIS;
 namespace NtisPlatform.Api.Controllers.WTIS;
 
 [ApiController]
-[Route("api/wtis")]
+[Route("api/wtis/pipe-size")]
 public class PipeSizeController : ControllerBase
 {
     private readonly IPipeSizeService _service;

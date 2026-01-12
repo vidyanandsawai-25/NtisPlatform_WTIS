@@ -9,7 +9,7 @@ namespace NtisPlatform.Api.Controllers.WTIS;
 /// Rate Master - Returns enriched data with all master table JOINs (Zone, Ward, PipeSize, ConnectionType, Category)
 /// </summary>
 [ApiController]
-[Route("api/wtis")]
+[Route("api/wtis/rate-master")]
 public class RateMasterController : ControllerBase
 {
     private readonly IRateMasterService _service;

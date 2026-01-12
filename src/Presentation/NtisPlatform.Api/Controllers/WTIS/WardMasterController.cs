@@ -9,7 +9,7 @@ namespace NtisPlatform.Api.Controllers.WTIS;
 /// Ward Master - Returns enriched data with Zone information via JOINs
 /// </summary>
 [ApiController]
-[Route("api/wtis")]
+[Route("api/wtis/ward-master")]
 public class WardMasterController : ControllerBase
 {
     private readonly IWardMasterService _service;

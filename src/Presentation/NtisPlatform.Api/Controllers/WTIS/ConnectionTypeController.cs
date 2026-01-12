@@ -6,7 +6,7 @@ using NtisPlatform.Application.Interfaces.WTIS;
 namespace NtisPlatform.Api.Controllers.WTIS;
 
 [ApiController]
-[Route("api/wtis")]
+[Route("api/wtis/connection-type")]
 public class ConnectionTypeController : ControllerBase
 {
     private readonly IConnectionTypeService _service;

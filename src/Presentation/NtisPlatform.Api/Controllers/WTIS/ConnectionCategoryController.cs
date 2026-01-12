@@ -6,7 +6,7 @@ using NtisPlatform.Application.Interfaces.WTIS;
 namespace NtisPlatform.Api.Controllers.WTIS;
 
 [ApiController]
-[Route("api/wtis")]
+[Route("api/wtis/connection-category")]
 public class ConnectionCategoryController : ControllerBase
 {
     private readonly IConnectionCategoryService _service;

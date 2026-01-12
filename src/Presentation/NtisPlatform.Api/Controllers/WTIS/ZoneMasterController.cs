@@ -6,7 +6,7 @@ using NtisPlatform.Application.Interfaces.WTIS;
 namespace NtisPlatform.Api.Controllers.WTIS;
 
 [ApiController]
-[Route("api/wtis")]
+[Route("api/wtis/zone-master")]
 public class ZoneMasterController : ControllerBase
 {
     private readonly IZoneMasterService _service;
