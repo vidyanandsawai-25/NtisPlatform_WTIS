@@ -7,19 +7,19 @@ namespace NtisPlatform.Api.Controllers.WTIS;
 
 [ApiController]
 [Route("api/wtis")]
-public class ConnectionCategoryController : ControllerBase
+public class ZoneMasterController : ControllerBase
 {
-    private readonly IConnectionCategoryService _service;
-    private readonly ILogger<ConnectionCategoryController> _logger;
+    private readonly IZoneMasterService _service;
+    private readonly ILogger<ZoneMasterController> _logger;
 
-    public ConnectionCategoryController(IConnectionCategoryService service, ILogger<ConnectionCategoryController> logger)
+    public ZoneMasterController(IZoneMasterService service, ILogger<ZoneMasterController> logger)
     {
         _service = service;
         _logger = logger;
     }
 
     [HttpGet]
-    public Task<IActionResult> GetAll([FromQuery] ConnectionCategoryQueryParameters queryParams, CancellationToken ct)
+    public Task<IActionResult> GetAll([FromQuery] ZoneMasterQueryParameters queryParams, CancellationToken ct)
         => this.ExecuteGetAllPaged(_service, queryParams, _logger, ct);
 
     [HttpGet("{id:int}")]
@@ -27,11 +27,11 @@ public class ConnectionCategoryController : ControllerBase
         => this.ExecuteGetById(_service, id, _logger, ct);
 
     [HttpPost]
-    public Task<IActionResult> Create([FromBody] CreateConnectionCategoryDto createDto, CancellationToken ct)
+    public Task<IActionResult> Create([FromBody] CreateZoneMasterDto createDto, CancellationToken ct)
         => this.ExecuteCreate(_service, createDto, _logger, ct);
 
     [HttpPut("{id:int}")]
-    public Task<IActionResult> Update(int id, [FromBody] UpdateConnectionCategoryDto updateDto, CancellationToken ct)
+    public Task<IActionResult> Update(int id, [FromBody] UpdateZoneMasterDto updateDto, CancellationToken ct)
         => this.ExecuteUpdate(_service, id, updateDto, _logger, ct);
 
     [HttpDelete("{id:int}")]

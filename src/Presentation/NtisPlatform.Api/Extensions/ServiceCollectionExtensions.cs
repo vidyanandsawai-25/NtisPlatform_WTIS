@@ -64,6 +64,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IConnectionTypeService, NtisPlatform.Application.Services.WTIS.ConnectionTypeService>();
         services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IConnectionCategoryService, NtisPlatform.Application.Services.WTIS.ConnectionCategoryService>();
         services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IPipeSizeService, NtisPlatform.Application.Services.WTIS.PipeSizeService>();
+        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IZoneMasterService, NtisPlatform.Application.Services.WTIS.ZoneMasterService>();
+        
+        // WTIS Ward Master (with custom repository for zone information)
+        services.AddScoped<NtisPlatform.Core.Interfaces.WTIS.IWardMasterRepository, NtisPlatform.Infrastructure.Repositories.WTIS.WardMasterRepository>();
+        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IWardMasterService, NtisPlatform.Application.Services.WTIS.WardMasterService>();
+        
+        // WTIS Rate Master (with custom repository for joined data)
+        services.AddScoped<NtisPlatform.Core.Interfaces.WTIS.IRateMasterRepository, NtisPlatform.Infrastructure.Repositories.WTIS.RateMasterRepository>();
+        services.AddScoped<NtisPlatform.Application.Interfaces.WTIS.IRateMasterService, NtisPlatform.Application.Services.WTIS.RateMasterService>();
 
         // AutoMapper
         services.AddAutoMapper(typeof(NtisPlatform.Application.Mappings.FloorMappingProfile).Assembly);

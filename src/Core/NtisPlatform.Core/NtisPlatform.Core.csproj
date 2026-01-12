@@ -1,9 +1,3 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk"><!-- All common properties are inherited from Directory.Build.props -->
 
-
-
-
-  <ItemGroup>
-    <Folder Include="Interfaces\WTIS\" />
-  </ItemGroup>
 </Project>

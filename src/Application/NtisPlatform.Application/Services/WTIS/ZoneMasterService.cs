@@ -7,12 +7,12 @@ using NtisPlatform.Core.Interfaces;
 
 namespace NtisPlatform.Application.Services.WTIS;
 
-public class ConnectionTypeService 
-    : BaseCommonCrudService<ConnectionTypeMasterEntity, ConnectionTypeDto, CreateConnectionTypeDto, UpdateConnectionTypeDto, ConnectionTypeQueryParameters, int>, 
-      IConnectionTypeService
+public class ZoneMasterService 
+    : BaseCommonCrudService<ZoneMasterEntity, ZoneMasterDto, CreateZoneMasterDto, UpdateZoneMasterDto, ZoneMasterQueryParameters, int>, 
+      IZoneMasterService
 {
-    public ConnectionTypeService(
-        IRepository<ConnectionTypeMasterEntity, int> repository,
+    public ZoneMasterService(
+        IRepository<ZoneMasterEntity, int> repository,
         IUnitOfWork unitOfWork,
         IMapper mapper)
         : base(repository, unitOfWork, mapper)

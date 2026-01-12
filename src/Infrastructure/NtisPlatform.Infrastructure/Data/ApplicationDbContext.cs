@@ -35,6 +35,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ConnectionTypeMasterEntity> ConnectionTypeMaster { get; set; } = null!;
     public DbSet<ConnectionCategoryMasterEntity> ConnectionCategoryMaster { get; set; } = null!;
     public DbSet<PipeSizeMasterEntity> PipeSizeMaster { get; set; } = null!;
+    public DbSet<ZoneMasterEntity> ZoneMaster { get; set; } = null!;
+    public DbSet<WardMasterEntity> WardMaster { get; set; } = null!;
+    public DbSet<RateMasterEntity> RateMaster { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +49,13 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("ConnectionTypeMaster", "WTIS");
             entity.HasKey(e => e.ConnectionTypeID);
             entity.Property(e => e.ConnectionTypeName).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.ConnectionTypeName).IsUnique();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnType("datetime").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.HasIndex(e => e.IsActive);
         });
 
         // WTIS - Connection Category Master
@@ -54,6 +64,13 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("ConnectionCategoryMaster", "WTIS");
             entity.HasKey(e => e.CategoryID);
             entity.Property(e => e.CategoryName).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.CategoryName).IsUnique();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnType("datetime").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.HasIndex(e => e.IsActive);
         });
 
         // WTIS - Pipe Size Master
@@ -62,6 +79,112 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("PipeSizeMaster", "WTIS");
             entity.HasKey(e => e.PipeSizeID);
             entity.Property(e => e.SizeName).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.SizeName).IsUnique();
+            entity.Property(e => e.DiameterMM).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnType("datetime").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // WTIS - Zone Master
+        modelBuilder.Entity<ZoneMasterEntity>(entity =>
+        {
+            entity.ToTable("ZoneMaster", "WTIS");
+            entity.HasKey(e => e.ZoneID);
+            entity.Property(e => e.ZoneName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ZoneCode).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.ZoneCode).IsUnique();
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnType("datetime").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // WTIS - Ward Master
+        modelBuilder.Entity<WardMasterEntity>(entity =>
+        {
+            entity.ToTable("WardMaster", "WTIS");
+            entity.HasKey(e => e.WardID);
+            entity.Property(e => e.WardName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.WardCode).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.WardCode).IsUnique();
+            entity.Property(e => e.ZoneID).IsRequired();
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnType("datetime").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.HasIndex(e => e.ZoneID);
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne<ZoneMasterEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ZoneID)
+                .HasConstraintName("FK_WardMaster_Zone")
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // WTIS - Rate Master
+        modelBuilder.Entity<RateMasterEntity>(entity =>
+        {
+            entity.ToTable("RateMaster", "WTIS");
+            entity.HasKey(e => e.RateID);
+            
+            entity.Property(e => e.ZoneID).IsRequired();
+            entity.Property(e => e.WardID).IsRequired();
+            entity.Property(e => e.TapSizeID).IsRequired();
+            entity.Property(e => e.ConnectionTypeID).IsRequired();
+            entity.Property(e => e.ConnectionCategoryID).IsRequired();
+            entity.Property(e => e.MinReading).IsRequired().HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MaxReading).IsRequired().HasColumnType("decimal(18,2)");
+            entity.Property(e => e.PerLiter).IsRequired().HasColumnType("decimal(18,4)");
+            entity.Property(e => e.MinimumCharge).IsRequired().HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MeterOffPenalty).IsRequired().HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Rate).IsRequired().HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Year).IsRequired();
+            entity.Property(e => e.Remark).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnType("datetime").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            
+            entity.HasIndex(e => e.ZoneID).HasDatabaseName("IX_RateMaster_Zone");
+            entity.HasIndex(e => e.WardID).HasDatabaseName("IX_RateMaster_Ward");
+            entity.HasIndex(e => e.ConnectionTypeID).HasDatabaseName("IX_RateMaster_ConnectionType");
+            entity.HasIndex(e => e.Year).HasDatabaseName("IX_RateMaster_Year");
+            entity.HasIndex(e => e.IsActive).HasDatabaseName("IX_RateMaster_IsActive");
+            
+            entity.HasOne<ZoneMasterEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ZoneID)
+                .HasConstraintName("FK_RateMaster_Zone")
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne<WardMasterEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.WardID)
+                .HasConstraintName("FK_RateMaster_Ward")
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne<ConnectionTypeMasterEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ConnectionTypeID)
+                .HasConstraintName("FK_RateMaster_ConnectionType")
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne<ConnectionCategoryMasterEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ConnectionCategoryID)
+                .HasConstraintName("FK_RateMaster_ConnectionCategory")
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne<PipeSizeMasterEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.TapSizeID)
+                .HasConstraintName("FK_RateMaster_PipeSize")
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // PTIS entities configuration

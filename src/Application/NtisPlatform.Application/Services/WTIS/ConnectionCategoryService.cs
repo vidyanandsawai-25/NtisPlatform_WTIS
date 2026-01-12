@@ -7,13 +7,8 @@ using NtisPlatform.Core.Interfaces;
 
 namespace NtisPlatform.Application.Services.WTIS;
 
-/// <summary>
-/// Connection Category service - Pure CRUD using generic base
-/// </summary>
 public class ConnectionCategoryService 
-    : BaseCommonCrudService<ConnectionCategoryMasterEntity, ConnectionCategoryDto, 
-                           CreateConnectionCategoryDto, UpdateConnectionCategoryDto, 
-                           ConnectionCategoryQueryParameters, int>,
+    : BaseCommonCrudService<ConnectionCategoryMasterEntity, ConnectionCategoryDto, CreateConnectionCategoryDto, UpdateConnectionCategoryDto, ConnectionCategoryQueryParameters, int>, 
       IConnectionCategoryService
 {
     public ConnectionCategoryService(
